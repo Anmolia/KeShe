@@ -15,14 +15,36 @@ class stockprocess:
         # print(self.df.dtypes)
         self.stockname = list(set(self.df.stock))
         self.stockname.sort()
-        print("行索引：",self.stockname)
+        # print("行索引：",self.stockname)
         self.colname = self.df.columns
-        print("列索引：",self.colname)
+        # print("列索引：",self.colname)
         self.dates = list(set(self.df["date"]))
         self.dates.sort()
         # print("datas:", self.datas)
-        print("dates:",self.dates)
+        # print("dates:",self.dates)
         print(len(self.dates))
+    def fill_excel(self):
+        print(self.df)
+        groups = self.df.groupby("stock")
+        # print("groups:",groups)
+        for key, value in groups:
+            # print("type:",type(key),"key:",key)
+            if len(value.date) != 5284:
+                a = list(set(self.dates) - set(value.date))
+                a.sort()
+                i = 0
+                for each in a:
+                    self.df = self.df.append({"stock": key, "date": each, "open": 0, "high": 0, "low": 0, "close": 0,
+                                              "adj_close": 0, "volume": 0, "dividend": 0, "spilt": 0},
+                                             ignore_index=True)
+                    print(i)
+                    i += 1
+                # print(key,a)
+            else:
+                print(key)
+        self.df.sort_index()
+        print("self.df", self.df)
+        self.df.to_csv(r"D:\Python3.9\Python_code\zonghekeshe\keshe1\files\stockall_final.csv")
     # 获取每个日期的股票的总值
     def getall_data(self):
         groups = self.df.groupby('date').agg("sum")
@@ -32,6 +54,9 @@ class stockprocess:
         print("行索引：",groups.index)
         print("列索引：",groups.columns)
         groups.to_csv(r"D:\Python3.9\Python_code\zonghekeshe\keshe1\files\stockall.csv")
+    def get_ave(self):
+        groups = self.df.groupby('date').agg("mean")
+        groups.to_csv(r"D:\Python3.9\Python_code\zonghekeshe\keshe1\files\stockall_ave.csv")
     def getall_ave(self):
         groups = self.df.groupby('stock').agg("mean")
         print("groups:", groups)
@@ -39,7 +64,9 @@ class stockprocess:
         groups.to_csv(r"D:\Python3.9\Python_code\zonghekeshe\keshe1\files\stockave.csv")
     def data_run(self):
         self.class_index_data()
+        self.fill_excel()
         self.getall_data()
+        self.get_ave()
         self.getall_ave()
 if __name__ == "__main__":
     a = stockprocess()
