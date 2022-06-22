@@ -7,38 +7,57 @@ import talib as ta
 class stockallchart:
     def __init__(self):
         # 获取数据
-        self.df = pd.read_csv(r"D:\Python3.9\Python_code\zonghekeshe\keshe1\files\stockall.csv", header=0)
+        self.df = pd.read_csv(r"D:\Python3.9\Python_code\zonghekeshe\keshe1\files\stockall_ave.csv", header=0)
         self.dates = list(self.df['date'])
     def drawKline(self):
         # print("时间", dates)
         # print("len：",len(dates))
-        numdata = self.df[["open","high","low","close","volume"]].values.tolist()
+        numdata = self.df[["open","close","low","high","volume"]].values.tolist()
         # print("数据：",numdata)
         # 绘制K线图
         c = (
             Kline()
-            .add_xaxis(self.dates)
+            .add_xaxis(xaxis_data=self.dates)
             .add_yaxis(
                 "kline",
                 numdata,
-                markline_opts=opts.MarkLineOpts(
-                    data=[opts.MarkLineItem(type_="max", value_dim="close")]
-                ),
                 itemstyle_opts=opts.ItemStyleOpts(  # 自定义颜色
                     color="#ef232a",
                     color0="#14b143",
                     border_color="#ef232a",
                     border_color0="#14b143",
                 ),
+                markline_opts=opts.MarkLineOpts(
+                    label_opts=opts.LabelOpts(
+                        position="middle", color="blue", font_size=15
+                    ),
+                ),
+                markpoint_opts=opts.MarkPointOpts(
+                    data=[
+                        opts.MarkPointItem(type_="max", name="最大值"),
+                        opts.MarkPointItem(type_="min", name="最小值"),
+                    ]
+                ),
             )
             .set_global_opts(
-                xaxis_opts=opts.AxisOpts(is_scale=True),
+                xaxis_opts=opts.AxisOpts(
+                    type_="category",
+                    is_scale=True,
+                    boundary_gap=False,
+                    axisline_opts=opts.AxisLineOpts(is_on_zero=False),
+                    splitline_opts=opts.SplitLineOpts(is_show=False),
+                    split_number=20,
+                    min_="dataMin",
+                    max_="dataMax",
+                    # is_scale=True
+                ),
                 yaxis_opts=opts.AxisOpts(
                     is_scale=True,
                     splitarea_opts=opts.SplitAreaOpts(
                         is_show=True, areastyle_opts=opts.AreaStyleOpts(opacity=1)
                     ),
                 ),
+                tooltip_opts=opts.TooltipOpts(trigger="axis", axis_pointer_type="line"),
                 # datazoom_opts=[ # opts.DataZoomOpts(pos_bottom="-2%")
                 #                opts.DataZoomOpts(is_show=False, type_="inside", xaxis_index=[0, 0], range_end=100,pos_bottom="-2%"),
                 #                # xaxis_i  ndex=[0, 0]设置第一幅图为内部缩放
@@ -47,7 +66,7 @@ class stockallchart:
                 #                opts.DataZoomOpts(is_show=False, xaxis_index=[0, 2], range_end=100),
                 #                # xaxis_index=[0, 2]连接第三幅图的axis
                 # ],
-                datazoom_opts=[opts.DataZoomOpts(pos_bottom="-2%")],
+                datazoom_opts=[opts.DataZoomOpts(type_='inside')],
                 title_opts=opts.TitleOpts(title="股市趋势发展"),
             )
             # .render("股票走势图1.html")
@@ -84,13 +103,17 @@ class stockallchart:
                     splitline_opts=opts.SplitLineOpts(is_show=False),
                     axislabel_opts=opts.LabelOpts(is_show=True),
                 ),
-                title_opts=opts.TitleOpts(title="MA折线图"),
+                # title_opts=opts.TitleOpts(title="MA折线图"),
             )
         )
         print("MA获取成功！")
         return MALine
         # overlap_kline_ma = c.overlap(MALine)
         # return overlap_kline_ma
+    def getvolumn(self):
+        bar_1 = (
+
+        )
     def display(self):
         overlap_kline_ma = self.drawKline()
         print("kline1:",overlap_kline_ma)
@@ -110,5 +133,5 @@ class stockallchart:
         grid_chart.render("股市走向图.html")
 if __name__ == "__main__":
     a = stockallchart()
-    print(a.dates)
+    print(len(a.dates))
     a.display()

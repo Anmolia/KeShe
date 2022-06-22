@@ -1,7 +1,7 @@
 from pyecharts import options as opts
 from pyecharts.charts import Kline,Bar,Line,Grid
 import pandas as pd
-
+import collections
 class stockprocess:
     def __init__(self):
         # 获取数据
@@ -35,7 +35,7 @@ class stockprocess:
                 i = 0
                 for each in a:
                     self.df = self.df.append({"stock": key, "date": each, "open": 0, "high": 0, "low": 0, "close": 0,
-                                              "adj_close": 0, "volume": 0, "dividend": 0, "spilt": 0},
+                                              "adj_close": 0, "volume": 0, "dividend": 0, "split": 1},
                                              ignore_index=True)
                     print(i)
                     i += 1
@@ -46,7 +46,7 @@ class stockprocess:
         print("self.df", self.df)
         self.df.to_csv(r"D:\Python3.9\Python_code\zonghekeshe\keshe1\files\stockall_final.csv")
     # 获取每个日期的股票的总值
-    def getall_data(self):
+    def getdate_sum(self):
         groups = self.df.groupby('date').agg("sum")
         print("groups:",groups)
         print(len(groups))
@@ -54,7 +54,7 @@ class stockprocess:
         print("行索引：",groups.index)
         print("列索引：",groups.columns)
         groups.to_csv(r"D:\Python3.9\Python_code\zonghekeshe\keshe1\files\stockall.csv")
-    def get_ave(self):
+    def getdate_ave(self):
         groups = self.df.groupby('date').agg("mean")
         groups.to_csv(r"D:\Python3.9\Python_code\zonghekeshe\keshe1\files\stockall_ave.csv")
     def getall_ave(self):
@@ -64,10 +64,14 @@ class stockprocess:
         groups.to_csv(r"D:\Python3.9\Python_code\zonghekeshe\keshe1\files\stockave.csv")
     def data_run(self):
         self.class_index_data()
+        l = list(self.df.split)
+        print(len(l))
         self.fill_excel()
-        self.getall_data()
-        self.get_ave()
+        self.getdate_sum()
+        self.getdate_ave()
         self.getall_ave()
+        l = list(self.df.split)
+        print(len(l))
 if __name__ == "__main__":
     a = stockprocess()
     # a.class_index_data()
