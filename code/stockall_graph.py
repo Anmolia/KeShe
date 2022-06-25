@@ -28,23 +28,27 @@ class stockallchart:
                     border_color0="#14b143",
                 ),
                 markline_opts=opts.MarkLineOpts(
-                    label_opts=opts.LabelOpts(
-                        position="middle", color="blue", font_size=15
-                    ),
-                ),
-                markpoint_opts=opts.MarkPointOpts(
                     data=[
-                        opts.MarkPointItem(type_="max", name="最大值"),
-                        opts.MarkPointItem(type_="min", name="最小值"),
-                    ]
+                        opts.MarkLineItem(type_="max", value_dim="close"),
+                        opts.MarkLineItem(type_='min', value_dim='close')
+                    ],
+                    # label_opts=opts.LabelOpts(),
+                    precision=4,
+                    linestyle_opts=opts.LineStyleOpts(width=1,color="#6666FF",opacity=1)
                 ),
+                # markpoint_opts=opts.MarkPointOpts(
+                #     data=[
+                #         opts.MarkPointItem(type_="max", name="最大值"),
+                #         opts.MarkPointItem(type_="min", name="最小值"),
+                #     ]
+                # ),
             )
             .set_global_opts(
                 xaxis_opts=opts.AxisOpts(
                     type_="category",
                     is_scale=True,
                     boundary_gap=False,
-                    axisline_opts=opts.AxisLineOpts(is_on_zero=False),
+                    axisline_opts=opts.AxisLineOpts(is_on_zero=True),
                     splitline_opts=opts.SplitLineOpts(is_show=False),
                     split_number=20,
                     min_="dataMin",
@@ -56,18 +60,20 @@ class stockallchart:
                     splitarea_opts=opts.SplitAreaOpts(
                         is_show=True, areastyle_opts=opts.AreaStyleOpts(opacity=1)
                     ),
+
                 ),
                 tooltip_opts=opts.TooltipOpts(trigger="axis", axis_pointer_type="line"),
-                # datazoom_opts=[ # opts.DataZoomOpts(pos_bottom="-2%")
-                #                opts.DataZoomOpts(is_show=False, type_="inside", xaxis_index=[0, 0], range_end=100,pos_bottom="-2%"),
-                #                # xaxis_i  ndex=[0, 0]设置第一幅图为内部缩放
-                #                opts.DataZoomOpts(is_show=True, xaxis_index=[0, 1], pos_top="97%", range_end=100),
-                #                # xaxis_index=[0, 1]连接第二幅图的axis
-                #                opts.DataZoomOpts(is_show=False, xaxis_index=[0, 2], range_end=100),
-                #                # xaxis_index=[0, 2]连接第三幅图的axis
-                # ],
-                datazoom_opts=[opts.DataZoomOpts(type_='inside')],
-                title_opts=opts.TitleOpts(title="股市趋势发展"),
+                datazoom_opts=[
+                    opts.DataZoomOpts(
+                        is_show=False, type_="inside", xaxis_index=[0, 0], range_end=100
+                    ),
+                    opts.DataZoomOpts(
+                        is_show=True, xaxis_index=[0, 1], pos_top="97%", range_end=100
+                    ),
+                    opts.DataZoomOpts(is_show=False, xaxis_index=[0, 2], range_end=100),
+                ],
+
+                title_opts=opts.TitleOpts(title="股市趋势发展",pos_left="0"),
             )
             # .render("股票走势图1.html")
         )
@@ -84,11 +90,18 @@ class stockallchart:
             Line()
             .add_xaxis(self.dates)
             .add_yaxis(series_name="MA5",
-                       y_axis=self.df['close'].rolling(10).mean(),
+                       y_axis=self.df['close'].rolling(5).mean(),
                        is_smooth=True,
-                       linestyle_opts=opts.LineStyleOpts(opacity=1),
+                       linestyle_opts=opts.LineStyleOpts(opacity=1,color="#0066CC"),
                        label_opts=opts.LabelOpts(is_show=False),
-                       )
+            )
+            .add_yaxis(
+                series_name="MA10",
+                y_axis=self.df['close'].rolling(10).mean(),
+                is_smooth=True,
+                linestyle_opts=opts.LineStyleOpts(opacity=1, color="#FF6600"),
+                label_opts=opts.LabelOpts(is_show=False),
+            )
             .set_global_opts(
                 xaxis_opts=opts.AxisOpts(
                     type_='category',
@@ -110,17 +123,187 @@ class stockallchart:
         return MALine
         # overlap_kline_ma = c.overlap(MALine)
         # return overlap_kline_ma
-    def getvolumn(self):
-        bar_1 = (
 
+    def getvolumn(self):
+        # volumeFlag = self.df['close'] - self.df['open']
+        print("成交量",self.df['volume'])
+        print(self.df['volume'])
+        # print(self.df)
+        # bar_1 = (
+        #     Bar()
+        #     .add_xaxis(xaxis_data=self.dates)
+        #     .add_yaxis(
+        #         series_name="成交量",
+        #         y_axis=self.df['volume'],
+        #         xaxis_index=1,
+        #         yaxis_index=1,
+        #         label_opts=opts.LabelOpts(is_show=False),
+        #         itemstyle_opts=opts.ItemStyleOpts(
+        #             color=JsCode(
+        #                 """
+        #             function(params) {
+        #                 var colorList;
+        #                 if (barData[params.dataIndex][1] > barData[params.dataIndex][0]) {
+        #                     colorList = '#ef232a';
+        #                 } else {
+        #                     colorList = '#14b143';
+        #                 }
+        #                 return colorList;
+        #             }
+        #             """
+        #             )
+        #         ),
+        #     )
+        #     .set_global_opts(
+        #         xaxis_opts=opts.AxisOpts(
+        #             type_="category",
+        #             grid_index=1,
+        #             axislabel_opts=opts.LabelOpts(is_show=False),
+        #         ),
+        #         legend_opts=opts.LegendOpts(is_show=False),
+        #     )
+        # )
+        # return bar_1
+        bar_1 = (
+            Bar()
+                .add_xaxis(xaxis_data=self.dates)
+                .add_yaxis(
+                series_name="Volume",
+                y_axis=self.df['volume'],
+                xaxis_index=1,
+                yaxis_index=1,
+                label_opts=opts.LabelOpts(is_show=False),
+            )
+                .set_global_opts(
+                xaxis_opts=opts.AxisOpts(
+                    type_="category",
+                    is_scale=True,
+                    grid_index=1,
+                    boundary_gap=False,
+                    axisline_opts=opts.AxisLineOpts(is_on_zero=False),
+                    axistick_opts=opts.AxisTickOpts(is_show=False),
+                    splitline_opts=opts.SplitLineOpts(is_show=False),
+                    axislabel_opts=opts.LabelOpts(is_show=False),
+                    split_number=20,
+                    min_="dataMin",
+                    max_="dataMax",
+                ),
+                yaxis_opts=opts.AxisOpts(
+                    grid_index=1,
+                    is_scale=True,
+                    split_number=2,
+                    axislabel_opts=opts.LabelOpts(is_show=False),
+                    axisline_opts=opts.AxisLineOpts(is_show=False),
+                    axistick_opts=opts.AxisTickOpts(is_show=False),
+                    splitline_opts=opts.SplitLineOpts(is_show=False),
+                ),
+                legend_opts=opts.LegendOpts(is_show=False),
+            )
         )
+        return bar_1
+    def getMADC(self):
+        # 获取MADC指标
+
+        print("MACD:",self.df["MACDS"])
+        # print(self.df.columns)
+        # print(self.df.split)
+        # print("sss",df_dea)
+
+        bar_2 = (
+            Bar()
+            .add_xaxis(xaxis_data=self.dates)
+            .add_yaxis(
+                series_name="MACD",
+                y_axis=self.df['MACDS'],
+                xaxis_index=2,
+                yaxis_index=2,
+                label_opts=opts.LabelOpts(is_show=False),
+                itemstyle_opts=opts.ItemStyleOpts(
+                    color=JsCode(
+                        """
+                            function(params) {
+                                var colorList;
+                                if (params.data >= 0) {
+                                  colorList = '#ef232a';
+                                } else {
+                                  colorList = '#14b143';
+                                }
+                                return colorList;
+                            }
+                            """
+                    )
+                ),
+            )
+            .set_global_opts(
+                xaxis_opts=opts.AxisOpts(
+                    type_="category",
+                    grid_index=2,
+                    axislabel_opts=opts.LabelOpts(is_show=False),
+                ),
+                yaxis_opts=opts.AxisOpts(
+                    grid_index=2,
+                    split_number=4,
+                    axisline_opts=opts.AxisLineOpts(is_on_zero=False),
+                    axistick_opts=opts.AxisTickOpts(is_show=False),
+                    splitline_opts=opts.SplitLineOpts(is_show=False),
+                    axislabel_opts=opts.LabelOpts(is_show=True),
+                ),
+                legend_opts=opts.LegendOpts(is_show=False),
+            )
+        )
+        lines = (
+            Line()
+                .add_xaxis(xaxis_data=self.dates)
+                .add_yaxis(
+                series_name="DIF",
+                y_axis=self.df["DIFF"],
+                xaxis_index=2,
+                yaxis_index=2,
+                label_opts=opts.LabelOpts(is_show=False),
+            )
+                .add_yaxis(
+                series_name="DEA",
+                y_axis=self.df["DEA"],
+                xaxis_index=2,
+                yaxis_index=2,
+                label_opts=opts.LabelOpts(is_show=False),
+            )
+                .set_global_opts(legend_opts=opts.LegendOpts(is_show=False))
+        )
+        # lines = self.getMACDline()
+        overlap_bar_line = bar_2.overlap(lines)
+        return overlap_bar_line
+
+    # def getMACDline(self):
+    #     lines = (
+    #         Line()
+    #         .add_xaxis(xaxis_data=self.dates)
+    #         .add_yaxis(
+    #             series_name="DIF",
+    #             y_axis=self.df["DIFF"],
+    #             xaxis_index=2,
+    #             yaxis_index=2,
+    #             label_opts=opts.LabelOpts(is_show=False),
+    #         )
+    #         .add_yaxis(
+    #             series_name="DIF",
+    #             y_axis=self.df["DEA"],
+    #             xaxis_index=2,
+    #             yaxis_index=2,
+    #             label_opts=opts.LabelOpts(is_show=False),
+    #         )
+    #         .set_global_opts(legend_opts=opts.LegendOpts(is_show=False))
+    #     )
+    #     return lines
     def display(self):
-        overlap_kline_ma = self.drawKline()
-        print("kline1:",overlap_kline_ma)
+        # overlap_kline_ma = self.drawKline()
+        # print("kline1:",overlap_kline_ma)
+        # bars = self.getvolumn()
+        # print("成交量：",bars)
         volumeFlag = self.df['close']-self.df['open']
-        print(volumeFlag)
+        # print(volumeFlag)
         # 最后的 Grid
-        grid_chart = Grid(init_opts=opts.InitOpts(width="1400px", height="800px"))
+        grid_chart = Grid(init_opts=opts.InitOpts(width="1500px", height="800px"))
 
         grid_chart.add_js_funcs(
             "var volumeFlag = {}".format(volumeFlag.values.tolist())
@@ -128,10 +311,29 @@ class stockallchart:
         # K线图和 MA5 的折线图
         grid_chart.add(
             self.drawKline(),
-            grid_opts=opts.GridOpts(pos_left="3%", pos_right="1%", height="60%"),
+            grid_opts=opts.GridOpts(
+                pos_left="3%", pos_right="5%", height="60%"
+            ),
+        )
+        grid_chart.add(
+            self.getvolumn(),
+            grid_opts=opts.GridOpts(
+                pos_left="3%", pos_right="5%", pos_top="71%", height="10%"
+            ),
+        )
+        grid_chart.add(
+            self.getMADC(),
+            grid_opts=opts.GridOpts(
+                pos_left="3%", pos_right="5%", pos_top="82%", height="14%"
+            ),
         )
         grid_chart.render("股市走向图.html")
+
+    # def test(self):
+    #     self.getvolandline()
 if __name__ == "__main__":
     a = stockallchart()
     print(len(a.dates))
     a.display()
+    print(a.df.columns)
+    # a.test()
