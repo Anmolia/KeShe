@@ -1,8 +1,7 @@
 import numpy as np
-from pyecharts import options as opts
-from pyecharts.charts import Kline,Bar,Line,Grid
+
 import pandas as pd
-import collections
+
 import talib as ta
 class stockprocess:
     def __init__(self):
@@ -60,24 +59,20 @@ class stockprocess:
     def getdate_ave(self):
 
         groups = self.df.groupby('date').agg("mean")
-        y_value = [int(y) for y in groups['volume'].values]
-        print("成交量：", y_value)
-        groups['volume'] = y_value
+        # y_value = [int(y) for y in groups['volume'].values]
+        # print("成交量：", y_value)
+        # groups['volume'] = y_value
         groups["DIFF"], groups["DEA"], groups["MACD"] = ta.MACD(groups['close'].values)
         groups["MACDS"] = groups["MACD"] * 2
         groups.replace(np.nan, 0, inplace=True)
-        y_value1 = [y*100 for y in groups["DIFF"]]
-        groups["DIFF"] = y_value1
-        y_value2 = [y*100 for y in groups["DEA"]]
-        groups["DEA"] = y_value2
-        print("MACD:", groups["MACDS"])
-        y_value3 = [int(y*100) for y in groups["MACDS"].values]
-        print("MACDS取整",y_value3)
-        # for y in range(len(y_value1)):
-        #     if y_value[y] == 'nan':
-        #         y_value[y] = 0
-        # print("MACDS取整", y_value1)
-        groups['MACDS'] = y_value3
+        # y_value1 = [y*100 for y in groups["DIFF"]]
+        # groups["DIFF"] = y_value1
+        # y_value2 = [y*100 for y in groups["DEA"]]
+        # groups["DEA"] = y_value2
+        # print("MACD:", groups["MACDS"])
+        # y_value3 = [int(y*100) for y in groups["MACDS"].values]
+        # print("MACDS取整",y_value3)
+        # groups['MACDS'] = y_value3
 
         print(groups)
         groups.to_csv(r"D:\Python3.9\Python_code\zonghekeshe\keshe1\files\stockall_ave.csv")
