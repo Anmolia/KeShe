@@ -1,5 +1,5 @@
 import json
-from pyecharts.charts import Line, Page, Bar
+from pyecharts.charts import Line, Page, Bar, Timeline
 from wordcloud import WordCloud
 import os
 import jieba.analyse
@@ -166,15 +166,17 @@ class covid():
         page.add(map_chart,map1,all,line1,line2)
         page.render('世界地图.html')
         os.system("世界地图.html")
-# covid()
+covid()
 class china():
     def __init__(self):
         self.ch=[]
         self.cont=[]
         self.pdc=[]
-        self.l1=[]#全国
+        self.l1=[]#全国中国消费物价指数
         self.l2=[]#城市
         self.l3=[]#农村
+        self.l4=[]#GDP
+        self.l5=[]#gdp增长指数
         self.page = Page(layout=Page.DraggablePageLayout)
         self.month = ['2020-01-31', '2020-02-29', '2020-03-31', '2020-04-30', '2020-05-31', '2020-06-30', '2020-07-31',
                       '2020-08-31', '2020-09-30',
@@ -213,18 +215,19 @@ class china():
         line = (Line()
                 .add_xaxis(xaxis_data=x)
                 .add_yaxis(series_name="中国感染新冠人数", y_axis=y1, is_smooth=True)
+                .add_yaxis(series_name="中国因新冠死亡人数", y_axis=y3, is_smooth=True)
                 .set_global_opts(title_opts=opts.TitleOpts(title="中国感染新冠人数折线图")))
         line1 = (Line()
                  .add_xaxis(xaxis_data=x)
                  .add_yaxis(series_name="中国接种疫苗总数", y_axis=y2, is_smooth=True)
                  .set_global_opts(title_opts=opts.TitleOpts(title="中国接种疫苗总数折线图"))
                  )
-        line2 = (Line()
-                 .add_xaxis(xaxis_data=x)
-                 .add_yaxis(series_name="中国因新冠死亡人数", y_axis=y3, is_smooth=True)
-                 .set_global_opts(title_opts=opts.TitleOpts(title="中国因新冠死亡人数折线图"))
-                 )
-        self.page.add(line, line1, line2)
+        # line2 = (Line()
+        #          .add_xaxis(xaxis_data=x)
+        #          .add_yaxis(series_name="中国因新冠死亡人数", y_axis=y3, is_smooth=True)
+        #          .set_global_opts(title_opts=opts.TitleOpts(title="中国因新冠死亡人数折线图"))
+        #          )
+        self.page.add(line, line1)
         # page.render('中国地图.html')
         # os.system("中国地图.html")
     def jingj(self):
@@ -240,7 +243,58 @@ class china():
         dataa = np.array(allch)
         self.l2 = dataa.tolist()
         print(self.l1)
+        self.gdp()
         self.prch()
+    def gdp(self):
+        path = 'E:\学习\课程设计三\gmjj\GDP.csv'
+        df = pd.read_csv(path,nrows =16)
+        print(df)
+        allc=df.loc[:,['Quater','GDP_Absolute','Primary_Indusry_Abs','Secondary_Indusry_Abs','Tertiary_Indusry_Abs']]
+        allch=df.loc[:,['Quater','GDP_YOY','Primary_Indusry_YOY','Secondary_Indusry_YOY','Tertiary_Indusry_YOY']]
+        dataa = np.array(allc)
+        self.l4 = dataa.tolist()
+        dataa = np.array(allch)
+        self.l5 = dataa.tolist()
+        self.gdpp()
+    def gdpp(self):
+        x = []
+        y1 = []
+        y2 = []
+        y3 = []
+        y4 = []
+        yy1 = []
+        yy2 = []
+        yy3 = []
+        yy4 = []
+        self.l4.reverse()
+        self.l5.reverse()
+        for i in range(0,len(self.l4)):
+            x.append(self.l4[i][0])
+            y1.append(self.l4[i][1])
+            y2.append(str(self.l4[i][2]))
+            y3.append(str(self.l4[i][3]))
+            y4.append(self.l4[i][4])
+            yy1.append(str(self.l5[i][1]).replace('%',''))
+            yy2.append(str(self.l5[i][2]).replace('%',''))
+            yy3.append(str(self.l5[i][3]).replace('%',''))
+            yy4.append(str(self.l5[i][4]).replace('%',''))
+        line = (Line()
+                .add_xaxis(xaxis_data=x)
+                .add_yaxis(series_name="国内生产总值绝对值", y_axis=y1, is_smooth=True)
+                .add_yaxis(series_name="第一产业绝对值_亿元", y_axis=y2, is_smooth=True)
+                .add_yaxis(series_name="第二产业绝对值_亿元", y_axis=y3, is_smooth=True)
+                .add_yaxis(series_name="第三产业绝对值_亿元", y_axis=y4, is_smooth=True)
+                .set_series_opts(label_opts=opts.LabelOpts(is_show=False))
+                .set_global_opts(title_opts=opts.TitleOpts(title="GDP总值")))
+        line1 = (Line()
+                 .add_xaxis(xaxis_data=x)
+                 .add_yaxis(series_name="国内生产总值同比增长", y_axis=yy1, is_smooth=True)
+                 .add_yaxis(series_name="第一产业同比增长", y_axis=yy2, is_smooth=True)
+                 .add_yaxis(series_name="第二产业同比增长", y_axis=yy3, is_smooth=True)
+                 .add_yaxis(series_name="第三产业同比增长", y_axis=yy4, is_smooth=True)
+                 .set_series_opts(label_opts=opts.LabelOpts(is_show=False))
+                 .set_global_opts(title_opts=opts.TitleOpts(title="GDP同比增长")))
+        self.page.add(line, line1)
     def prch(self):#全国消费物价指数
         x=[]
         y1=[]
