@@ -1,5 +1,5 @@
 import json
-from pyecharts.charts import Line, Page, Bar, Timeline
+from pyecharts.charts import Line, Page, Bar, Timeline, Pie
 from wordcloud import WordCloud
 import os
 import jieba.analyse
@@ -15,6 +15,8 @@ class covid():
         self.l1=[]
         self.l2=[]
         self.cont=[]
+        self.zhou={}
+        self.cun=['Somalia', 'Liechtenstein', 'Morocco', 'W. Sahara', 'Serbia', 'Afghanistan', 'Angola', 'Albania', 'Andorra', 'United Arab Emirates', 'Argentina', 'Armenia', 'Australia', 'Austria', 'Azerbaijan', 'Burundi', 'Belgium', 'Benin', 'Burkina Faso', 'Bangladesh', 'Bulgaria', 'Bahrain', 'Bahamas', 'Bosnia and Herz.', 'Belarus', 'Belize', 'Bermuda', 'Bolivia', 'Brazil', 'Barbados', 'Brunei', 'Bhutan', 'Botswana', 'Central African Rep.', 'Canada', 'Switzerland', 'Chile', 'China', "Côte d'Ivoire", 'Cameroon', 'Dem. Rep. Congo', 'Congo', 'Colombia', 'Cape Verde', 'Costa Rica', 'Cuba', 'N. Cyprus', 'Cyprus', 'Czech Rep.', 'Germany', 'Djibouti', 'Denmark', 'Dominican Rep.', 'Algeria', 'Ecuador', 'Egypt', 'Eritrea', 'Spain', 'Estonia', 'Ethiopia', 'Finland', 'Fiji', 'France', 'Gabon', 'United Kingdom', 'Georgia', 'Ghana', 'Guinea', 'Gambia', 'Guinea-Bissau', 'Eq. Guinea', 'Greece', 'Grenada', 'Greenland', 'Guatemala', 'Guam', 'Guyana', 'Honduras', 'Croatia', 'Haiti', 'Hungary', 'Indonesia', 'India', 'Br. Indian Ocean Ter.', 'Ireland', 'Iran', 'Iraq', 'Iceland', 'Israel', 'Italy', 'Jamaica', 'Jordan', 'Japan', 'Siachen Glacier', 'Kazakhstan', 'Kenya', 'Kyrgyzstan', 'Cambodia', 'Korea', 'Kuwait', 'Lao PDR', 'Lebanon', 'Liberia', 'Libya', 'Sri Lanka', 'Lesotho', 'Lithuania', 'Luxembourg', 'Latvia', 'Moldova', 'Madagascar', 'Mexico', 'Macedonia', 'Mali', 'Malta', 'Myanmar', 'Montenegro', 'Mongolia', 'Mozambique', 'Mauritania', 'Mauritius', 'Malawi', 'Malaysia', 'Namibia', 'New Caledonia', 'Niger', 'Nigeria', 'Nicaragua', 'Netherlands', 'Norway', 'Nepal', 'New Zealand', 'Oman', 'Pakistan', 'Panama', 'Peru', 'Philippines', 'Papua New Guinea', 'Poland', 'Puerto Rico', 'Dem. Rep. Korea', 'Portugal', 'Paraguay', 'Palestine', 'Qatar', 'Romania', 'Russia', 'Rwanda', 'Saudi Arabia', 'Sudan', 'S. Sudan', 'Senegal', 'Singapore', 'Solomon Is.', 'Sierra Leone', 'El Salvador', 'Suriname', 'Slovakia', 'Slovenia', 'Sweden', 'Swaziland', 'Seychelles', 'Syria', 'Chad', 'Togo', 'Thailand', 'Tajikistan', 'Turkmenistan', 'Timor-Leste', 'Tonga', 'Trinidad and Tobago', 'Tunisia', 'Turkey', 'Tanzania', 'Uganda', 'Ukraine', 'Uruguay', 'United States', 'Uzbekistan', 'Venezuela', 'Vietnam', 'Vanuatu', 'Yemen', 'South Africa', 'Zambia', 'Zimbabwe', 'Aland', 'American Samoa', 'Fr. S. Antarctic Lands', 'Antigua and Barb.', 'Comoros', 'Curaçao', 'Cayman Is.', 'Dominica', 'Falkland Is.', 'Faeroe Is.', 'Micronesia', 'Heard I. and McDonald Is.', 'Isle of Man', 'Jersey', 'Kiribati', 'Saint Lucia', 'N. Mariana Is.', 'Montserrat', 'Niue', 'Palau', 'Fr. Polynesia', 'S. Geo. and S. Sandw. Is.', 'Saint Helena', 'St. Pierre and Miquelon', 'São Tomé and Principe', 'Turks and Caicos Is.', 'St. Vin. and Gren.', 'U.S. Virgin Is.', 'Samoa']
         self.month = ['2020-01-31', '2020-02-29', '2020-03-31', '2020-04-30', '2020-05-31', '2020-06-30', '2020-07-31',
                       '2020-08-31', '2020-09-30',
                       '2020-10-31', '2020-11-30', '2020-12-31',
@@ -37,9 +39,12 @@ class covid():
     def openw(self):
         path='E:\学习\课程设计三\owid-covid-data.csv'
         df = pd.read_csv(path,index_col=0)
-        l=df.loc[:,['location','date','total_cases','total_vaccinations','total_deaths']]
+        # l=df.loc[:,['location','date','total_cases','total_vaccinations','total_deaths']]
+        l = df.loc[:, ['location', 'date', 'total_cases', 'total_vaccinations', 'total_deaths', 'people_vaccinated',
+                       'total_boosters', 'total_vaccinations_per_hundred', 'people_vaccinated_per_hundred','total_boosters_per_hundred']]
         l2=df.loc[:,['date','location','total_cases','total_deaths']]
         l = l.fillna(0)
+        l.replace(np.nan, 0,inplace=True)
         group = l.groupby("location")
         self.cont=list(group)
         dataa= np.array(l)
@@ -51,22 +56,48 @@ class covid():
         dict={}
         dict2={}
         world=[]
+        china=[]
         for i in self.cont:
             list1=np.array(i[1:])
             a=np.max(list1[0],axis=0)
             if a[0]=='World':
                 world=list1[0]
+            if a[0]=='China':
+                china=list1[0]
             dict2[i[0]]=a[3]
-        wy=[]
+        wy=[]#世界
         wx=[]
         dy=[]
+        ymy=[]#接种疫苗一针
+        ym1=[]
+        ym2=[]
+        ym3=[]
+        ym4=[]
         world=world.tolist()
-        print(type(world))
+        # print(type(world))
         for i in world:
-            if i[1] in self.month:
-                wy.append(i[3])
-                wx.append(i[1])
-        print(len(wy),len(wx))
+            # if i[1] in self.month:
+            wy.append(i[3])
+            wx.append(i[1])
+            ymy.append(i[5])
+            ym1.append(i[6])
+            ym2.append(i[7])
+            ym3.append(i[8])
+            ym4.append(i[9])
+        ymyc = []  # 接种疫苗一针
+        ym1c = []
+        ym2c = []
+        ym3c= []
+        ym4c= []
+        china = china.tolist()
+        for i in china:
+            # if i[1] in self.month:
+            ymyc.append(i[5])
+            ym1c.append(i[6])
+            ym2c.append(i[7])
+            ym3c.append(i[8])
+            ym4c.append(i[9])
+        # print(len(wy),len(wx))
         for i in self.l1:
             if i[1] =='2022-03-11':
                 dict[i[0]]=i[2]
@@ -116,8 +147,28 @@ class covid():
                     {"min": 10000, "max": 100000, "label": "10000-100000人", "color": "#FFB769"},
                     {"min": 100000, "max": 1000000, "label": "100000-1000000人", "color": "#FF8F66"},
                     {"min": 1000000, "max": 10000000, "label": "100000-10000000人", "color": "#ED514E"},
-                    {"min": 10000000, "max": 10000000000, "label": "1000000000人以上", "color": "#CA0D11"}
+                    {"min": 10000000, "max": 10000000000, "label": "10000000人以上", "color": "#CA0D11"}
                 ]))
+        attr1 = ["10000人以下", "10000-100000人", "100000-1000000人", "100000-10000000人", "10000000人以上"]
+        pi1 = [0, 0, 0, 0, 0]
+        for i in range(len(cnum)):
+            if cname[i] in self.cun:
+                if cnum[i] < 10000:
+                    pi1[0] += 1
+                if cnum[i] >= 10000 and cnum[i] < 100000:
+                    pi1[1] += 1
+                if cnum[i] >= 100000 and cnum[i] < 1000000:
+                    pi1[2] += 1
+                if cnum[i] >= 1000000 and cnum[i] < 10000000:
+                    pi1[3] += 1
+                if cnum[i] >= 10000000:
+                    pi1[4] += 1
+        c1 = (
+            Pie()
+                .add("", [list(z) for z in zip(attr1, pi1)])
+                .set_global_opts(title_opts=opts.TitleOpts(title="感染人数"))
+                .set_series_opts(label_opts=opts.LabelOpts(formatter="{b}: {d}%"))
+        )
         map1 = Map()
         map1.add("截止2022-3-11全球接种疫苗数", [list(z) for z in zip(cname, total_c)], 'world', is_map_symbol_show=False)
         map1.set_series_opts(label_opts=opts.LabelOpts(is_show=False))
@@ -131,39 +182,213 @@ class covid():
                                           {"min": 1000000, "max": 10000000, "label": "1000000-10000000人", "color": "#FF8F66"},
                                           {"min": 10000000, "max": 100000000, "label": "1000000-100000000人",
                                            "color": "#ED514E"},
-                                          {"min": 100000000, "max": 100000000000, "label": "10000000000人以上",
+                                          {"min": 100000000, "max": 100000000000, "label": "100000000人以上",
                                            "color": "#CA0D11"}
                                       ]))
         x=[]
         y=[]
+        attr=["100000人以下","100000-1000000人","1000000-10000000人","1000000-100000000人","100000000人以上"]
+        pi=[0,0,0,0,0]
+        for i in range(len(total_c)):
+            if cname[i] in self.cun:
+                if total_c[i]<10000:
+                    pi[0]+=1
+                if total_c[i]>=10000 and total_c[i]< 1000000 :
+                    pi[1]+=1
+                if total_c[i]>=1000000 and total_c[i]< 10000000 :
+                    pi[2]+=1
+                if total_c[i]>=10000000 and total_c[i]< 100000000 :
+                    pi[3]+=1
+                if total_c[i]>=100000000 :
+                    pi[4]+=1
         for i in self.l2:
             if i[1]=='World':
-                if i[0] in self.month:
-                    x.append(i[0])
-                    y.append(i[2])
-                    dy.append(i[3])
+                # if i[0] in self.month:
+                x.append(i[0])
+                y.append(i[2])
+                dy.append(i[3])
+        c = (
+            Pie()
+                .add("", [list(z) for z in zip(attr, pi)])
+                .set_global_opts(title_opts=opts.TitleOpts(title="接种数"))
+                .set_series_opts(label_opts=opts.LabelOpts(formatter="{b}:{d}%"))
+        )
         line=(Line()
             .add_xaxis(xaxis_data=x)
-            .add_yaxis(series_name="世界感染新冠人数", y_axis=y, is_smooth=True)
-            .set_global_opts(title_opts=opts.TitleOpts(title="世界感染新冠人数折线图")))
+            .add_yaxis(series_name="世界感染新冠人数折线图", y_axis=y, is_smooth=True,markpoint_opts=opts.MarkPointOpts(data=[opts.MarkPointItem(type_="max",name="最大值",symbol_size=105),##设置最大值 标记
+                                                                ]
+                                                          ,symbol='pin'
+                                                            ))
+            .set_global_opts(title_opts=opts.TitleOpts(title="世界感染新冠人数折线图"),yaxis_opts=opts.AxisOpts(name = '人数（人）'), xaxis_opts=opts.AxisOpts(
+                        type_ = 'category',
+                        name = '日期',
+                        is_show = True,
+                        is_scale = False,
+                        is_inverse = False,
+                        name_location = 'end',
+                        name_gap = 35,
+                        name_rotate = 30,  #旋转30度
+                        interval= None,
+                        grid_index = 0,
+                        position = 'bottom',
+                        offset = 0,
+                        split_number = 5,
+                        boundary_gap = None,
+                        min_  = None,
+                        max_ = None,
+                        min_interval = 0,
+                        max_interval = None),datazoom_opts=[
+                opts.DataZoomOpts(
+                    is_show=False, type_="inside",pos_bottom="-2%", xaxis_index=[0, 0], range_start=98, range_end=100)])
+                 )
         bar=(Bar()
              .add_xaxis(xaxis_data=x)
-             .add_yaxis(series_name='世界感染新冠人数',y_axis=y)
-             .set_global_opts(title_opts=opts.TitleOpts(title='世界感染新冠人数柱形图'))
+             .add_yaxis(series_name='世界感染新冠人数柱形图',y_axis=y)
+             # .add_yaxis(series_name='中国感染新冠人数柱形图', y_axis=cy)
+             .set_global_opts(title_opts=opts.TitleOpts(title='世界感染新冠人数'),yaxis_opts=opts.AxisOpts(name = '人数（人）'), xaxis_opts=opts.AxisOpts(
+                        type_ = 'category',
+                        name = '日期',
+                        is_show = True,
+                        is_scale = False,
+                        is_inverse = False,
+                        name_location = 'end',
+                        name_gap = 35,
+                        name_rotate = 30,  #旋转30度
+                        interval= None,
+                        grid_index = 0,
+                        position = 'bottom',
+                        offset = 0,
+                        split_number = 5,
+                        boundary_gap = None,
+                        min_  = None,
+                        max_ = None,
+                        min_interval = 0,
+                        max_interval = None),datazoom_opts=[
+                opts.DataZoomOpts(
+                    is_show=False, type_="inside",pos_bottom="-2%", xaxis_index=[0, 0], range_start=98, range_end=100)])
              .set_series_opts(label_opts=opts.LabelOpts(is_show=False)))
         line1=(Line()
             .add_xaxis(xaxis_data=x)
-            .add_yaxis(series_name="世界接种疫苗总数", y_axis=wy, is_smooth=True)
-            .set_global_opts(title_opts=opts.TitleOpts(title="世界接种疫苗总数折线图"))
-               )
+            .add_yaxis(series_name="世界接种疫苗总数", y_axis=wy, is_smooth=True,markpoint_opts=opts.MarkPointOpts(data=[opts.MarkPointItem(type_="max",name="最大值",symbol_size=125),##设置最大值 标记
+                                                                ]
+                                                          ,symbol='pin'
+                                                            ))
+            .add_yaxis(series_name="接种过至少一剂疫苗的总人数", y_axis=ymy, is_smooth=True,markpoint_opts=opts.MarkPointOpts(data=[opts.MarkPointItem(type_="max",name="最大值",symbol_size=125),##设置最大值 标记
+                                                                ]
+                                                          ,symbol='pin'
+                                                            ))
+            .set_global_opts(title_opts=opts.TitleOpts(title="世界接种疫苗总数折线图"),yaxis_opts=opts.AxisOpts(name = '人数（人）'), xaxis_opts=opts.AxisOpts(
+                        type_ = 'category',
+                        name = '日期',
+                        is_show = True,
+                        is_scale = False,
+                        is_inverse = False,
+                        name_location = 'end',
+                        name_gap = 35,
+                        name_rotate = 30,  #旋转30度
+                        interval= None,
+                        grid_index = 0,
+                        position = 'bottom',
+                        offset = 0,
+                        split_number = 5,
+                        boundary_gap = None,
+                        min_  = None,
+                        max_ = None,
+                        min_interval = 0,
+                        max_interval = None),
+            datazoom_opts=[
+                opts.DataZoomOpts(
+                    is_show=False, type_="inside",pos_bottom="-2%", xaxis_index=[0, 0], range_start=98, range_end=100)]))
         line2 = (Line()
                  .add_xaxis(xaxis_data=x)
-                 .add_yaxis(series_name="世界因新冠死亡人数", y_axis=dy, is_smooth=True)
-                 .set_global_opts(title_opts=opts.TitleOpts(title="世界因新冠死亡人数折线图"))
+                 .add_yaxis(series_name="世界因新冠死亡人数", y_axis=dy, is_smooth=True,markpoint_opts=opts.MarkPointOpts(data=[opts.MarkPointItem(type_="max",name="最大值",symbol_size=115),##设置最大值 标
+                                                                ]
+                                                          ,symbol='pin'
+                                                            ))
+                 .set_global_opts(title_opts=opts.TitleOpts(title="世界因新冠死亡人数折线图"),yaxis_opts=opts.AxisOpts(name = '人数（人）'), xaxis_opts=opts.AxisOpts(
+                        type_ = 'category',
+                        name = '日期',
+                        is_show = True,
+                        is_scale = False,
+                        is_inverse = False,
+                        name_location = 'end',
+                        name_gap = 35,
+                        name_rotate = 30,  #旋转30度
+                        interval= None,
+                        grid_index = 0,
+                        position = 'bottom',
+                        offset = 0,
+                        split_number = 5,
+                        boundary_gap = None,
+                        min_  = None,
+                        max_ = None,
+                        min_interval = 0,
+                        max_interval = None),datazoom_opts=[
+                opts.DataZoomOpts(
+                    is_show=False, type_="inside",pos_bottom="-2%", xaxis_index=[0, 0], range_start=98, range_end=100)])
                  )
+        line3 = (Line()
+                 .add_xaxis(xaxis_data=x)
+                 .add_yaxis(series_name="接受初始疫苗接种方案规定的所有剂量的总人数", y_axis=ym1, is_smooth=True)
+                 .add_yaxis(series_name="COVID-19 疫苗加强剂总数", y_axis=ym2, is_smooth=True)
+                 .add_yaxis(series_name="总人口中每 100 人接种的 COVID-19 疫苗总数", y_axis=ym3, is_smooth=True)
+                 .add_yaxis(series_name="总人口中每 100 人接种的 COVID-19 疫苗加强剂总数", y_axis=ym4, is_smooth=True)
+                 .set_global_opts(title_opts=opts.TitleOpts(title="世界接种疫苗总数折线图"),yaxis_opts=opts.AxisOpts(name = '人数（人）'), xaxis_opts=opts.AxisOpts(
+                        type_ = 'category',
+                        name = '日期',
+                        is_show = True,
+                        is_scale = False,
+                        is_inverse = False,
+                        name_location = 'end',
+                        name_gap = 35,
+                        name_rotate = 30,  #旋转30度
+                        interval= None,
+                        grid_index = 0,
+                        position = 'bottom',
+                        offset = 0,
+                        split_number = 5,
+                        boundary_gap = None,
+                        min_  = None,
+                        max_ = None,
+                        min_interval = 0,
+                        max_interval = None),
+                                  datazoom_opts=[
+                                      opts.DataZoomOpts(
+                                          is_show=False, type_="inside", pos_bottom="-2%", xaxis_index=[0, 0],
+                                          range_start=98, range_end=100)]))
+        line4 = (Line()
+                 .add_xaxis(xaxis_data=x)
+                 .add_yaxis(series_name="中国接受初始疫苗接种方案规定的所有剂量的总人数", y_axis=ym1c, is_smooth=True)
+                 .add_yaxis(series_name="中国COVID-19 疫苗加强剂总数", y_axis=ym2c, is_smooth=True)
+                 .add_yaxis(series_name="中国总人口中每 100 人接种的 COVID-19 疫苗总数", y_axis=ym3c, is_smooth=True)
+                 .add_yaxis(series_name="中国总人口中每 100 人接种的 COVID-19 疫苗加强剂总数", y_axis=ym4c, is_smooth=True)
+                 .set_global_opts(title_opts=opts.TitleOpts(title="中国接种疫苗总数折线图"),yaxis_opts=opts.AxisOpts(name = '人数（人）'), xaxis_opts=opts.AxisOpts(
+                        type_ = 'category',
+                        name = '日期',
+                        is_show = True,
+                        is_scale = False,
+                        is_inverse = False,
+                        name_location = 'end',
+                        name_gap = 35,
+                        name_rotate = 30,  #旋转30度
+                        interval= None,
+                        grid_index = 0,
+                        position = 'bottom',
+                        offset = 0,
+                        split_number = 5,
+                        boundary_gap = None,
+                        min_  = None,
+                        max_ = None,
+                        min_interval = 0,
+                        max_interval = None),
+                                  datazoom_opts=[
+                                      opts.DataZoomOpts(
+                                          is_show=False, type_="inside", pos_bottom="-2%", xaxis_index=[0, 0],
+                                          range_start=98, range_end=100)]))
+
         all=bar.overlap(line)
         page = Page(layout=Page.DraggablePageLayout)
-        page.add(map_chart,map1,all,line1,line2)
+        page.add(map_chart,c1,map1,c,all,line1,line2,line3,line4)
         page.render('世界地图.html')
         os.system("世界地图.html")
 covid()
@@ -190,7 +415,7 @@ class china():
     def yuanshiyiq(self):
         path = 'E:\学习\课程设计三\owid-covid-data.csv'
         df = pd.read_csv(path, index_col=0)
-        l = df.loc[:, ['location', 'date', 'total_cases', 'total_vaccinations', 'total_deaths']]
+        l = df.loc[:, ['location', 'date', 'total_cases', 'total_vaccinations', 'total_deaths','people_vaccinated','total_boosters','total_vaccinations_per_hundred','people_vaccinated_per_hundred']]
         group = l.groupby("location")
         self.cont = list(group)
         for i in self.cont:
@@ -199,6 +424,7 @@ class china():
             if list1[0][0][0]=='China':
                 self.ch=array
                 break
+        x0=[]
         x=[]
         y1=[]
         y2=[]
@@ -206,33 +432,101 @@ class china():
         self.ch.tolist()
         print(self.ch)
         for i in self.ch[0]:
-            # if i[1] in self.month:
             x.append(i[1])
-            y1.append(i[2])
+            if i[1] in self.month:
+                x0.append(i[1])
+                y1.append(i[2])
+                y3.append(i[4])
             y2.append(i[3])
-            y3.append(i[4])
         # print(self.ch.tolist())
         line = (Line()
-                .add_xaxis(xaxis_data=x)
+                .add_xaxis(xaxis_data=x0)
                 .add_yaxis(series_name="中国感染新冠人数", y_axis=y1, is_smooth=True)
                 .add_yaxis(series_name="中国因新冠死亡人数", y_axis=y3, is_smooth=True)
-                .set_global_opts(title_opts=opts.TitleOpts(title="中国感染新冠人数折线图")))
+                .set_global_opts(title_opts=opts.TitleOpts(title="中国感染新冠人数折线图"),yaxis_opts=opts.AxisOpts(name = '人数（人）'), xaxis_opts=opts.AxisOpts(
+                        type_ = 'category',
+                        name = '日期',
+                        is_show = True,
+                        is_scale = False,
+                        is_inverse = False,
+                        name_location = 'end',
+                        name_gap = 35,
+                        name_rotate = 30,  #旋转30度
+                        interval= None,
+                        grid_index = 0,
+                        position = 'bottom',
+                        offset = 0,
+                        split_number = 5,
+                        boundary_gap = None,
+                        min_  = None,
+                        max_ = None,
+                        min_interval = 0,
+                        max_interval = None),datazoom_opts=[
+                opts.DataZoomOpts(
+                    is_show=False, type_="inside",pos_bottom="-2%", xaxis_index=[0, 0], range_start=98, range_end=100)]))
         line1 = (Line()
                  .add_xaxis(xaxis_data=x)
                  .add_yaxis(series_name="中国接种疫苗总数", y_axis=y2, is_smooth=True)
-                 .set_global_opts(title_opts=opts.TitleOpts(title="中国接种疫苗总数折线图"))
+                 .set_global_opts(title_opts=opts.TitleOpts(title="中国接种疫苗总数折线图"),yaxis_opts=opts.AxisOpts(name = '人数（人）'), xaxis_opts=opts.AxisOpts(
+                        type_ = 'category',
+                        name = '日期',
+                        is_show = True,
+                        is_scale = False,
+                        is_inverse = False,
+                        name_location = 'end',
+                        name_gap = 35,
+                        name_rotate = 30,  #旋转30度
+                        interval= None,
+                        grid_index = 0,
+                        position = 'bottom',
+                        offset = 0,
+                        split_number = 5,
+                        boundary_gap = None,
+                        min_  = None,
+                        max_ = None,
+                        min_interval = 0,
+                        max_interval = None),datazoom_opts=[
+                opts.DataZoomOpts(
+                    is_show=False, type_="inside",pos_bottom="-2%", xaxis_index=[0, 0], range_start=98, range_end=100)])
                  )
+        bar = (Bar()
+               .add_xaxis(xaxis_data=x0)
+               .add_yaxis(series_name='中国感染新冠人数柱形图', y_axis=y1)
+               .add_yaxis(series_name='中国因新冠死亡人数柱形图', y_axis=y3)
+               .set_global_opts(title_opts=opts.TitleOpts(title='世界感染新冠人数柱形图'),yaxis_opts=opts.AxisOpts(name = '人数（人）'), xaxis_opts=opts.AxisOpts(
+                        type_ = 'category',
+                        name = '日期',
+                        is_show = True,
+                        is_scale = False,
+                        is_inverse = False,
+                        name_location = 'end',
+                        name_gap = 35,
+                        name_rotate = 30,  #旋转30度
+                        interval= None,
+                        grid_index = 0,
+                        position = 'bottom',
+                        offset = 0,
+                        split_number = 5,
+                        boundary_gap = None,
+                        min_  = None,
+                        max_ = None,
+                        min_interval = 0,
+                        max_interval = None),datazoom_opts=[
+                opts.DataZoomOpts(
+                    is_show=False, type_="inside",pos_bottom="-2%", xaxis_index=[0, 0], range_start=98, range_end=100)])
+               .set_series_opts(label_opts=opts.LabelOpts(is_show=False)))
         # line2 = (Line()
         #          .add_xaxis(xaxis_data=x)
         #          .add_yaxis(series_name="中国因新冠死亡人数", y_axis=y3, is_smooth=True)
         #          .set_global_opts(title_opts=opts.TitleOpts(title="中国因新冠死亡人数折线图"))
         #          )
-        self.page.add(line, line1)
+        all=line.overlap(bar)
+        self.page.add(all, line1)
         # page.render('中国地图.html')
         # os.system("中国地图.html")
     def jingj(self):
         path='E:\学习\课程设计三\gmjj\CPI.csv'
-        df = pd.read_csv(path,nrows =49)
+        df = pd.read_csv(path)
         allc=df.loc[:,['Month','Nation_Current_Month','Nation_YOY','Nation_Comparative_Rate','Nation_Total']]
         allch=df.loc[:,['Month','City_Current_Month','City_YOY','City_Comparative_Rate','City_Total']]
         allnc = df.loc[:, ['Month', 'Country_Current_Month', 'Country_YOY', 'Country_Comparative_Rate', 'Country_Total']]
@@ -247,7 +541,7 @@ class china():
         self.prch()
     def gdp(self):
         path = 'E:\学习\课程设计三\gmjj\GDP.csv'
-        df = pd.read_csv(path,nrows =16)
+        df = pd.read_csv(path)
         print(df)
         allc=df.loc[:,['Quater','GDP_Absolute','Primary_Indusry_Abs','Secondary_Indusry_Abs','Tertiary_Indusry_Abs']]
         allch=df.loc[:,['Quater','GDP_YOY','Primary_Indusry_YOY','Secondary_Indusry_YOY','Tertiary_Indusry_YOY']]
@@ -285,7 +579,27 @@ class china():
                 .add_yaxis(series_name="第二产业绝对值_亿元", y_axis=y3, is_smooth=True)
                 .add_yaxis(series_name="第三产业绝对值_亿元", y_axis=y4, is_smooth=True)
                 .set_series_opts(label_opts=opts.LabelOpts(is_show=False))
-                .set_global_opts(title_opts=opts.TitleOpts(title="GDP总值")))
+                .set_global_opts(title_opts=opts.TitleOpts(title="GDP总值"),yaxis_opts=opts.AxisOpts(name = '价值（亿元）'), xaxis_opts=opts.AxisOpts(
+                        type_ = 'category',
+                        name = '日期',
+                        is_show = True,
+                        is_scale = False,
+                        is_inverse = False,
+                        name_location = 'end',
+                        name_gap = 35,
+                        name_rotate = 30,  #旋转30度
+                        interval= None,
+                        grid_index = 0,
+                        position = 'bottom',
+                        offset = 0,
+                        split_number = 5,
+                        boundary_gap = None,
+                        min_  = None,
+                        max_ = None,
+                        min_interval = 0,
+                        max_interval = None),datazoom_opts=[
+                opts.DataZoomOpts(
+                    is_show=False, type_="inside",pos_bottom="-2%", xaxis_index=[0, 0], range_start=98, range_end=100)]))
         line1 = (Line()
                  .add_xaxis(xaxis_data=x)
                  .add_yaxis(series_name="国内生产总值同比增长", y_axis=yy1, is_smooth=True)
@@ -293,7 +607,27 @@ class china():
                  .add_yaxis(series_name="第二产业同比增长", y_axis=yy3, is_smooth=True)
                  .add_yaxis(series_name="第三产业同比增长", y_axis=yy4, is_smooth=True)
                  .set_series_opts(label_opts=opts.LabelOpts(is_show=False))
-                 .set_global_opts(title_opts=opts.TitleOpts(title="GDP同比增长")))
+                 .set_global_opts(title_opts=opts.TitleOpts(title="GDP同比增长"),yaxis_opts=opts.AxisOpts(name = '增长率（%）'), xaxis_opts=opts.AxisOpts(
+                        type_ = 'category',
+                        name = '日期',
+                        is_show = True,
+                        is_scale = False,
+                        is_inverse = False,
+                        name_location = 'end',
+                        name_gap = 35,
+                        name_rotate = 30,  #旋转30度
+                        interval= None,
+                        grid_index = 0,
+                        position = 'bottom',
+                        offset = 0,
+                        split_number = 5,
+                        boundary_gap = None,
+                        min_  = None,
+                        max_ = None,
+                        min_interval = 0,
+                        max_interval = None),datazoom_opts=[
+                            opts.DataZoomOpts(
+                                is_show=False, type_="inside",pos_bottom="-2%", xaxis_index=[0, 0], range_start=98, range_end=100)]))
         self.page.add(line, line1)
     def prch(self):#全国消费物价指数
         x=[]
@@ -336,7 +670,27 @@ class china():
                 .add_yaxis(series_name="农村当月", y_axis=yyy1, is_smooth=True)
                 .add_yaxis(series_name="农村累计", y_axis=yyy4, is_smooth=True)
                 .set_series_opts(label_opts=opts.LabelOpts(is_show=False))
-                .set_global_opts(title_opts=opts.TitleOpts(title="全国消费物价指数")))
+                .set_global_opts(title_opts=opts.TitleOpts(title="全国消费物价指数"),yaxis_opts=opts.AxisOpts(name = '价格（亿元）'), xaxis_opts=opts.AxisOpts(
+                        type_ = 'category',
+                        name = '日期',
+                        is_show = True,
+                        is_scale = False,
+                        is_inverse = False,
+                        name_location = 'end',
+                        name_gap = 35,
+                        name_rotate = 30,  #旋转30度
+                        interval= None,
+                        grid_index = 0,
+                        position = 'bottom',
+                        offset = 0,
+                        split_number = 5,
+                        boundary_gap = None,
+                        min_  = None,
+                        max_ = None,
+                        min_interval = 0,
+                        max_interval = None),datazoom_opts=[
+                opts.DataZoomOpts(
+                    is_show=False, type_="inside",pos_bottom="-2%", xaxis_index=[0, 0], range_start=98, range_end=100)]))
         line1 = (Line()
                 .add_xaxis(xaxis_data=x)
                 .add_yaxis(series_name="全国同比增长", y_axis=y2, is_smooth=True)
@@ -346,7 +700,27 @@ class china():
                  .add_yaxis(series_name="农村同比增长", y_axis=yyy2, is_smooth=True)
                  .add_yaxis(series_name="农村环比增长", y_axis=yyy3, is_smooth=True)
                 .set_series_opts(label_opts=opts.LabelOpts(is_show=False))
-                .set_global_opts(title_opts=opts.TitleOpts(title="全国消费物价指数(%)")))
+                .set_global_opts(title_opts=opts.TitleOpts(title="全国消费物价指数(%)"),yaxis_opts=opts.AxisOpts(name = '增长率（%）'), xaxis_opts=opts.AxisOpts(
+                        type_ = 'category',
+                        name = '日期',
+                        is_show = True,
+                        is_scale = False,
+                        is_inverse = False,
+                        name_location = 'end',
+                        name_gap = 35,
+                        name_rotate = 30,  #旋转30度
+                        interval= None,
+                        grid_index = 0,
+                        position = 'bottom',
+                        offset = 0,
+                        split_number = 5,
+                        boundary_gap = None,
+                        min_  = None,
+                        max_ = None,
+                        min_interval = 0,
+                        max_interval = None),datazoom_opts=[
+                opts.DataZoomOpts(
+                    is_show=False, type_="inside",pos_bottom="-2%", xaxis_index=[0, 0], range_start=98, range_end=100)]))
         self.page.add(line,line1)
         self.page.render('中国消费物价指数.html')
         os.system("中国消费物价指数.html")
