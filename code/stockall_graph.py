@@ -8,12 +8,20 @@ class stockallchart:
     def __init__(self):
         # 获取数据
         self.df = pd.read_csv(r"D:\Python3.9\Python_code\zonghekeshe\keshe1\files\stockall_ave.csv", header=0)
-        self.dates = list(self.df['date'])
+        self.dates = []
+        # self.dates.sort()
+        # self.df = self.df.sort_values("date",ascending=True)
+        # print(self.df.values.tolist())
+    def processdata(self):
+        self.df['date'] = pd.to_datetime(self.df["date"])
+        self.df['date'] = self.df['date'].apply(lambda x: x.strftime('%Y/%m/%d'))
+        self.dates = self.df['date'].values.tolist()
+
     def drawKline(self):
-        # print("时间", dates)
+        print("时间", self.dates)
         # print("len：",len(dates))
         numdata = self.df[["open","close","low","high","volume"]].values.tolist()
-        # print("数据：",numdata)
+        print("数据：",numdata)
         # 绘制K线图
         c = (
             Kline()
@@ -169,13 +177,16 @@ class stockallchart:
                 ),
                 yaxis_opts=opts.AxisOpts(
                     # name="volume",
+                    # type_="catagory",
+                    is_show=True,
+
                     grid_index=1,
                     is_scale=True,
                     split_number=2,
-                    axislabel_opts=opts.LabelOpts(is_show=False),
-                    axisline_opts=opts.AxisLineOpts(is_show=False),
-                    axistick_opts=opts.AxisTickOpts(is_show=False),
-                    splitline_opts=opts.SplitLineOpts(is_show=False),
+                    axislabel_opts=opts.LabelOpts(is_show=True),
+                    axisline_opts=opts.AxisLineOpts(is_show=True),
+                    axistick_opts=opts.AxisTickOpts(is_show=True),
+                    splitline_opts=opts.SplitLineOpts(is_show=True),
                 ),
                 legend_opts=opts.LegendOpts(is_show=False),
             )
@@ -220,7 +231,7 @@ class stockallchart:
                     split_number=4,
                     axisline_opts=opts.AxisLineOpts(is_on_zero=False),
                     axistick_opts=opts.AxisTickOpts(is_show=False),
-                    splitline_opts=opts.SplitLineOpts(is_show=False),
+                    splitline_opts=opts.SplitLineOpts(is_show=True),
                     axislabel_opts=opts.LabelOpts(is_show=True),
                 ),
                 legend_opts=opts.LegendOpts(is_show=False),
@@ -267,19 +278,19 @@ class stockallchart:
         grid_chart.add(
             self.drawKline(),
             grid_opts=opts.GridOpts(
-                pos_left="3%", pos_right="5%", height="60%"
+                pos_left="5%", pos_right="5%", height="60%"
             ),
         )
         grid_chart.add(
             self.getvolumn(),
             grid_opts=opts.GridOpts(
-                pos_left="3%", pos_right="5%", pos_top="71%", height="10%"
+                pos_left="5%", pos_right="5%", pos_top="71%", height="10%"
             ),
         )
         grid_chart.add(
             self.getMADC(),
             grid_opts=opts.GridOpts(
-                pos_left="3%", pos_right="5%", pos_top="83%", height="14%"
+                pos_left="5%", pos_right="5%", pos_top="83%", height="14%"
             ),
         )
         grid_chart.render("道琼斯工业指数平均走向.html")
@@ -288,6 +299,8 @@ class stockallchart:
     #     self.getvolandline()
 if __name__ == "__main__":
     a = stockallchart()
+
+    a.processdata()
     print(len(a.dates))
     a.display()
     print(a.df.columns)

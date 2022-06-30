@@ -1,5 +1,3 @@
-import time
-
 from pyecharts import options as opts
 from pyecharts.charts import Kline,Bar,Line,Grid
 import pandas as pd

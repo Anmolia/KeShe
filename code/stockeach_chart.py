@@ -11,7 +11,13 @@ class stockallchart:
         self.df = pd.read_csv(r"D:\Python3.9\Python_code\zonghekeshe\keshe1\files\stockall_final.csv", header=0)
         self.dates = list(set(self.df['date']))
         self.groups = self.df.groupby('stock')
+    def processdata(self,value):
+        value['date'] = pd.to_datetime(value["date"])
+        value['date'] = value['date'].apply(lambda x: x.strftime('%Y/%m/%d'))
+        return value
     def drewKline(self):
+        self.dates.sort()
+        print(self.dates)
         c_0 = (
             Kline()
             .add_xaxis(xaxis_data=self.dates)
@@ -74,6 +80,7 @@ class stockallchart:
                     # .render("股票走势图1.html")
         )
         for key,value in self.groups:
+            value = self.processdata(value)
             y_data = value[["open", "close", "low", "high", "volume"]].values.tolist()
             c = (
                 Kline()
@@ -110,14 +117,14 @@ class stockallchart:
                 .add_yaxis(series_name=name+"_MA5",
                            y_axis=value['close'].rolling(5).mean(),
                            is_smooth=True,
-                           linestyle_opts=opts.LineStyleOpts(opacity=1, color="#0066CC"),
+                           linestyle_opts=opts.LineStyleOpts(opacity=1),#, color="#0066CC"),
                            label_opts=opts.LabelOpts(is_show=False),
                 )
                 .add_yaxis(
                 series_name=name+"_MA10",
                 y_axis=value['close'].rolling(10).mean(),
                 is_smooth=True,
-                linestyle_opts=opts.LineStyleOpts(opacity=1, color="#FF6600"),
+                linestyle_opts=opts.LineStyleOpts(opacity=1), #color="#FF6600"),
                 label_opts=opts.LabelOpts(is_show=False),
             )
             .set_global_opts(

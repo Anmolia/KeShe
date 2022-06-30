@@ -19,7 +19,7 @@ class china_FR:
         x_data = numdata['Month'].values.tolist()
         # print(x_data)
         line1 = (
-            Line()
+            Line(init_opts=opts.InitOpts(width="1500px",height="600px"))
             .add_xaxis(
                 xaxis_data=x_data
             )
@@ -61,7 +61,7 @@ class china_FR:
                 title_opts=opts.TitleOpts(title="中国财政收入"),
                 datazoom_opts=[
                     opts.DataZoomOpts(
-                        is_show=False, type_="inside", xaxis_index=[0, 0], range_start=98, range_end=100
+                        is_show=False, type_="inside", pos_bottom="2%", xaxis_index=[0, 0], range_start=98, range_end=100
                     ),
                 ]
             )
@@ -71,55 +71,71 @@ class china_FR:
     def draw_line2(self):
         numdata = self.df[['Month', 'Current_Month_YOY', 'Current_Month_Comparattive', 'Total_YOY']]
         x_data = numdata['Month'].values.tolist()
+        y_data1 = [float(x.strip("%")) for x in numdata["Current_Month_YOY"].values.tolist()]
+        y_data2 = [float(x.strip("%")) for x in numdata["Current_Month_Comparattive"].values.tolist()]
+        y_data3 = [float(x.strip("%")) for x in numdata["Total_YOY"].values.tolist()]
         line2 = (
-            Line()
+            Line(init_opts=opts.InitOpts(width="1500px",height="600px"))
             .add_xaxis(
                 xaxis_data=x_data
             )
             .add_yaxis(
                 series_name="当月同比增长",
-                y_axis=numdata["Current_Month_YOY"].values.tolist(),
-                # linestyle_opts=opts.LineStyleOpts(width=2, opacity=1, color="#FF6600"),
+                y_axis=y_data1,
+                linestyle_opts=opts.LineStyleOpts(width=2, opacity=1),
                 label_opts=opts.LabelOpts(is_show=False),
                 markpoint_opts=opts.MarkPointOpts(
                     data=[
-                        opts.MarkPointItem(type_="max", name="最大值", symbol_size=80),
-                        opts.MarkPointItem(type_="min", name="最小值", symbol_size=80),
+                        opts.MarkPointItem(type_="max", name="最大值", symbol_size=45),
+                        opts.MarkPointItem(type_="min", name="最小值", symbol_size=45),
                     ]
                 ),
-                markline_opts=opts.MarkLineOpts(data=[opts.MarkLineItem(type_="average")])
+                # markline_opts=opts.MarkLineOpts(
+                #     data=[opts.MarkLineItem(type_="average")],
+                #     label_opts=opts.LabelOpts(
+                #         font_size=15,margin=50)
+                # )
 
             )
             .add_yaxis(
                 series_name="当月环比增长",
-                y_axis=numdata["Current_Month_Comparattive"].values.tolist(),
-                linestyle_opts=opts.LineStyleOpts(width=2, opacity=1, color="#0066CC"),
+                y_axis=y_data2,
+                linestyle_opts=opts.LineStyleOpts(width=2, opacity=1),
                 label_opts=opts.LabelOpts(is_show=False),
                 markpoint_opts=opts.MarkPointOpts(
                     data=[
-                        opts.MarkPointItem(type_="max", name="平均值", symbol_size=80),
-                        opts.MarkPointItem(type_="min", name="最小值", symbol_size=80),
+                        opts.MarkPointItem(type_="max", name="平均值", symbol_size=45),
+                        opts.MarkPointItem(type_="min", name="最小值", symbol_size=45),
                     ]
                 ),
-                markline_opts=opts.MarkLineOpts(data=[opts.MarkLineItem(type_="average")]),
+                # markline_opts=opts.MarkLineOpts(
+                #     data=[opts.MarkLineItem(type_="average")],
+                #     label_opts=opts.LabelOpts(font_size=15)
+                # ),
             )
             .add_yaxis(
                 series_name="累计同比增长",
-                y_axis=numdata["Total_YOY"].values.tolist(),
-                linestyle_opts=opts.LineStyleOpts(width=2, opacity=1, color="#0066CC"),
+                y_axis=y_data3,
+                linestyle_opts=opts.LineStyleOpts(width=2, opacity=1),
                 label_opts=opts.LabelOpts(is_show=False),
                 markpoint_opts=opts.MarkPointOpts(
                     data=[
-                        opts.MarkPointItem(type_="max", name="平均值", symbol_size=80),
-                        opts.MarkPointItem(type_="min", name="最小值", symbol_size=80),
+                        opts.MarkPointItem(type_="max", name="平均值", symbol_size=45),
+                        opts.MarkPointItem(type_="min", name="最小值", symbol_size=45),
                     ]
                 ),
-                markline_opts=opts.MarkLineOpts(data=[opts.MarkLineItem(type_="average")]),
+                # markline_opts=opts.MarkLineOpts(
+                #     data=[
+                #         opts.MarkLineItem(type_="average"),
+                #     ],
+                #     label_opts=opts.LabelOpts(font_size=15)
+                # ),
             )
             .set_global_opts(
                 tooltip_opts=opts.TooltipOpts(trigger="axis"),
                 yaxis_opts=opts.AxisOpts(
                     type_="value",
+                    axislabel_opts=opts.LabelOpts(formatter="{value} %"),
                     axistick_opts=opts.AxisTickOpts(is_show=True),
                     splitline_opts=opts.SplitLineOpts(is_show=True),
                 ),

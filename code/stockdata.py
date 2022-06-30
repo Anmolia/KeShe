@@ -44,6 +44,8 @@ class stockprocess:
             else:
                 print(key)
         self.df.sort_index()
+        self.df['date'] = pd.to_datetime(self.df["date"])
+        self.df['date'] = self.df['date'].apply(lambda x: x.strftime('%Y/%m/%d'))
         print("self.df", self.df)
         self.df.to_csv(r"D:\Python3.9\Python_code\zonghekeshe\keshe1\files\stockall_final.csv")
     # 获取每个日期的股票的总值
